@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>6-Servo Robotic Arm Control</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.3/mqttws31.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .slider {
+      width: 300px;
+      margin: 10px 0;
+    }
+    .robot-arm {
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      position: relative;
+    }
+    .servo {
+      fill: #888;
+      stroke: #555;
+      stroke-width: 2;
+    }
+    .active-servo {
+      fill: #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <h1>6-Servo Robotic Arm Control</h1>
+  <div id="controls">
+    <div>
+      <label for="servo1">Servo 1:</label>
+      <input type="range" id="servo1" name="servo1" min="0" max="180" class="slider" oninput="sendServoCommand(1, this.value)">
+    </div>
+    <div>
+      <label for="servo2">Servo 2:</label>
+      <input type="range" id="servo2" name="servo2" min="0" max="180" class="slider" oninput="sendServoCommand(2, this.value)">
+    </div>
+    <div>
+      <label for="servo3">Servo 3:</label>
+      <input type="range" id="servo3" name="servo3" min="0" max="180" class="slider" oninput="sendServoCommand(3, this.value)">
+    </div>
+    <div>
+      <label for="servo4">Servo 4:</label>
+      <input type="range" id="servo4" name="servo4" min="0" max="180" class="slider" oninput="sendServoCommand(4, this.value)">
+    </div>
+    <div>
+      <label for="servo5">Servo 5:</label>
+      <input type="range" id="servo5" name="servo5" min="0" max="180" class="slider" oninput="sendServoCommand(5, this.value)">
+    </div>
+    <div>
+      <label for="servo6">Servo 6:</label>
+      <input type="range" id="servo6" name="servo6" min="0" max="180" class="slider" oninput="sendServoCommand(6, this.value)">
+    </div>
+  </div>
+  <svg class="robot-arm" viewBox="0 0 100 100">
+    <!-- Simple representation of the robot arm -->
+    <rect x="45" y="10" width="10" height="20" class="servo" id="arm1"/>
+    <rect x="45" y="30" width="10" height="20" class="servo" id="arm2"/>
+    <rect x="45" y="50" width="10" height="20" class="servo" id="arm3"/>
+    <rect x="45" y="70" width="10" height="20" class="servo" id="arm4"/>
+    <rect x="45" y="90" width="10" height="20" class="servo" id="arm5"/>
+    <rect x="45" y="110" width="10" height="20" class="servo" id="arm6"/>
+  </svg>
+
+  <script>
+    var mqtt;
+    var reconnectTimeout = 2000;
+    var host = "f3118935747e48298eeed37c4b9b7f78.s1.eu.hivemq.cloud";
+    var port = 8884; // WebSockets secure port for HiveMQ
+    var username = "FYP_probptt0";
+    var password = "123456Wei";
+
+    function onConnect() {
+      console.log("Connected to MQTT broker");
+    }
+
+    function onFailure(message) {
+      console.log("Connection failed: " + message.errorMessage + ". Retrying...");
+      setTimeout(MQTTconnect, reconnectTimeout);
+    }
+
+    function MQTTconnect() {
+      console.log("Connecting to " + host + "...");
+      mqtt = new Paho.MQTT.Client(host, port, "web_client");
+
+      var options = {
+        timeout: 3,
+        useSSL: true,
+        userName: username,
+        password: password,
+        onSuccess: onConnect,
+        onFailure: onFailure,
+      };
+
+      mqtt.connect(options);
+    }
+
+    function sendServoCommand(servo, angle) {
+      var message = new Paho.MQTT.Message(angle.toString());
+      message.destinationName = "robotic_arm/servo" + servo;
+      mqtt.send(message);
+
+      // Update the visual representation of the servo
+      for (var i = 1; i <= 6; i++) {
+        document.getElementById('arm' + i).classList.remove('active-servo');
+      }
+      document.getElementById('arm' + servo).classList.add('active-servo');
+    }
+
+    window.onload = function() {
+      MQTTconnect();
+    };
+  </script>
+</body>
+</html>
